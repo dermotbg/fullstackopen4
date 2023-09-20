@@ -56,6 +56,32 @@ test('empty likes value defaults to zero', async () => {
   expect(result.likes).toEqual(0)
 })
 
+describe('rejecting missing values', () => {
+
+  test('blogs without title rejected', async () => {
+    const blogWithoutTitle = {
+      author: 'Dermot',
+      url: '/test/blog',
+      likes: 9
+    }
+    await api
+      .post('/api/blogs')
+      .send([blogWithoutTitle])
+      .expect(400)
+  })
+  test('blogs without url will be rejected', async () => {
+    const blogWithoutURL = {
+      title: 'Blog without URL',
+      author: 'Dermot',
+      likes: 5
+    }
+    await api
+      .post('/api/blogs')
+      .send(blogWithoutURL)
+      .expect(400)
+  })
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
