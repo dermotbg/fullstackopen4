@@ -1,11 +1,11 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RfdXNlcjIiLCJpZCI6IjY1MGQ2N2E3MWM3ZjkyOTZhZmZkMTZiZiIsImlhdCI6MTY5NTM3OTQxMCwiZXhwIjoxNjk1MzgzMDEwfQ.drDl4gL5Slso1wTcCjb3qozsJ_-SSjNM0VE2oler4rI
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RfdXNlcjIiLCJpZCI6IjY1MGQ2N2E3MWM3ZjkyOTZhZmZkMTZiZiIsImlhdCI6MTY5NTM4MDk2MiwiZXhwIjoxNjk1Mzg0NTYyfQ.6hHjRoIo6geAz5mXoiS1LsqW0QVAINdW5pxdDEmmxdI
 
 {
-  "title": "Running out of title names",
-  "author": "The man of mystery",
+  "title": "Running out of title names again2",
+  "author": "Teddy Tedderson",
   "url": "/testblog/anothertest",
-  "likes": 111,
+  "likes": 1235,
   "userId": "650d564808df9ef05f14f899"
 }
