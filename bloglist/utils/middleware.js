@@ -1,4 +1,6 @@
 const { info } = require('./logger')
+const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const unknownEndpoint = (_request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
@@ -36,9 +38,21 @@ const tokenExtractor = (request, response, next) => {
   next()
 }
 
+const userExtractor = async (request, response, next) => {
+  if (request.method === 'POST'){
+    request.user = await User.findOne(request.userId)
+  }
+  if (request.method === 'DELETE'){
+    const blog = await Blog.findById(request.params.id)
+    request.user = await User.findById(blog.user)
+  }
+  next()
+}
+
 module.exports = {
   unknownEndpoint,
   requestLogger,
   errorHandler,
-  tokenExtractor
+  tokenExtractor,
+  userExtractor
 }

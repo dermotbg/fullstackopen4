@@ -1,7 +1,8 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blog')
-const User = require('../models/user')
+// const User = require('../models/user')
 const jwt = require('jsonwebtoken')
+const { userExtractor } = require('../utils/middleware')
 
 blogsRouter.get('/', async (_request, response) => {
   const blogs = await Blog.find({})
@@ -19,7 +20,7 @@ blogsRouter.get('/:id', async (request, response) => {
   }
 })
 
-blogsRouter.post('/', async (request, response) => {
+blogsRouter.post('/', userExtractor, async (request, response) => {
   const body = request.body
 
   if (body.title === undefined || body.url === undefined) {
@@ -30,14 +31,14 @@ blogsRouter.post('/', async (request, response) => {
     if (!decodedToken.id){
       return response.status(401).json({ error: 'token invalid' })
     }
-    const user = await User.findById(decodedToken.id)
+    const user = request.user
 
     const blog = new Blog({
       title: body.title,
       author: body.author,
       url: body.url,
       likes: body.likes ? body.likes : 0,
-      user: user.id
+      user: request.user._id.toString()
     })
 
     const savedBlog = await blog.save()
@@ -48,9 +49,20 @@ blogsRouter.post('/', async (request, response) => {
   }
 })
 
-blogsRouter.delete('/:id', async (request, response) => {
-  await Blog.findByIdAndRemove(request.params.id)
-  response.status(204).end()
+blogsRouter.delete('/:id', userExtractor, async (request, response) => {
+
+  const decodedToken = jwt.verify(request.token, process.env.SECRET)
+
+  if (!decodedToken.id){
+    return response.status(401).json({ error: 'token invalid' })
+  }
+  if (decodedToken.id.toString() === request.user.id.toString()) {
+    await Blog.findByIdAndRemove(request.params.id)
+    return response.status(204).end()
+  }
+  else{
+    return response.status(403).json({ error: 'unauthorized user' })
+  }
 })
 
 blogsRouter.put('/:id', async (request, response) => {

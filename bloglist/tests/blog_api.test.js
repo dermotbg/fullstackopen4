@@ -8,12 +8,18 @@ const Blog = require('../models/blog')
 const User = require('../models/user')
 
 beforeEach(async () => {
+  await User.deleteMany({})
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'root', name: 'root_user', passwordHash })
+  await user.save()
+
   await Blog.deleteMany({})
   const blogObjs = helper.initialBlogs
-    .map(b => new Blog(b))
+    .map(b => new Blog({ ...b, user: user._id })) // adding in users _id to blog creation so the middleware picks it up.
   const promiseArray = blogObjs.map(b => b.save())
   await Promise.all(promiseArray)
 })
+
 
 describe('All blogs are returned', () => {
   test('return all blogs', async () => {
@@ -38,6 +44,9 @@ describe('Verification of id definition', () => {
 
 describe('Blog creation', () => {
   test('a valid blog can be added', async () => {
+
+    const token = await helper.generateToken()
+
     const newBlog = {
       title: 'Blog created in test',
       author: 'Dermot',
@@ -48,6 +57,7 @@ describe('Blog creation', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -56,10 +66,34 @@ describe('Blog creation', () => {
     const titles = response.map(r => r.title)
     expect(titles).toContain('Blog created in test')
   })
+
+  test('a blog without a token is rejected', async () => {
+
+    const newBlog = {
+      title: 'A blog with no token',
+      author: 'Dermot',
+      url: '/test/blog',
+      likes: 7
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+
+    const response = await helper.blogsInDB()
+    expect(response).toHaveLength(helper.initialBlogs.length)
+    const titles = response.map(r => r.title)
+    expect(titles).not.toContain('A blog with no token')
+  })
 })
+
 
 describe('Default behaviour', () => {
   test('empty likes value defaults to zero', async () => {
+    const token = await helper.generateToken()
+
     const newBlog = {
       title: 'Empty likes value',
       author: 'Dermot',
@@ -68,6 +102,7 @@ describe('Default behaviour', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', `Bearer ${token}`)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -112,11 +147,16 @@ describe('Rejecting missing values', () => {
 
 describe('Deleting and Updating blogs', () => {
   test('blogs can be deleted', async () => {
+    const token = await helper.generateToken()
+
+
     const blogsAtStart = await helper.blogsInDB()
     const blogToDelete = blogsAtStart[0]
 
+
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(204)
 
     const blogsAtEnd = await helper.blogsInDB()
