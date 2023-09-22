@@ -151,6 +151,7 @@ describe('User Creation', () => {
     const user = new User({ username: 'root', passwordHash })
     await user.save()
   })
+
   test('valid user is created', async () => {
     const usersAtStart = await helper.usersInDb()
     const newUser = {
@@ -169,6 +170,7 @@ describe('User Creation', () => {
     const usernames = usersAtEnd.map(u => u.username)
     expect(usernames).toContain(newUser.username)
   })
+
   test('fails with proper statuscode if username is taken', async () => {
     const usersAtStart = await helper.usersInDb()
     const newUser = {
@@ -185,6 +187,7 @@ describe('User Creation', () => {
     const usersAtEnd = await helper.usersInDb()
     expect(usersAtEnd).toEqual(usersAtStart)
   })
+
   test('fails with proper statuscode if username is too short', async () => {
     const usersAtStart = await helper.usersInDb()
     const newUser = {
@@ -197,15 +200,15 @@ describe('User Creation', () => {
       .send(newUser)
       .expect(400)
       .expect('Content-Type', /application\/json/)
-    console.log(result.body.error)
     expect(result.body.error).toContain('User validation failed: username: Path `username` (`te`) is shorter than the minimum allowed length (3)')
     const usersAtEnd = await helper.usersInDb()
     expect(usersAtEnd).toEqual(usersAtStart)
   })
+
   test('fails with proper statuscode if password is too short', async () => {
     const usersAtStart = await helper.usersInDb()
     const newUser = {
-      username: 'tet',
+      username: 'test_username',
       name: 'Test username',
       password: 'ta'
     }
@@ -214,12 +217,44 @@ describe('User Creation', () => {
       .send(newUser)
       .expect(400)
       .expect('Content-Type', /application\/json/)
-    console.log(result.body.error)
     expect(result.body.error).toContain('password must be longer that 3 characters')
     const usersAtEnd = await helper.usersInDb()
     expect(usersAtEnd).toEqual(usersAtStart)
   })
+
+  test('username is required', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      name: 'Test username',
+      password: 'test_Password'
+    }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    expect(result.body.error).toContain('Path `username` is required.')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toEqual(usersAtStart)
+  })
+
+  test('password is required', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'test_username',
+      name: 'Test username'
+    }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    expect(result.body.error).toContain('password must be provided')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toEqual(usersAtStart)
+  })
 })
+
 
 afterAll(async () => {
   await mongoose.connection.close()
