@@ -2,8 +2,10 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const api = supertest(app)
+const bcrypt = require('bcrypt')
 const helper = require('./test_helper')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 beforeEach(async () => {
   await Blog.deleteMany({})
@@ -139,6 +141,85 @@ describe('Deleting and Updating blogs', () => {
   })
 })
 
+// User tests
+
+describe('User Creation', () => {
+  beforeEach(async () => {
+    await User.deleteMany({})
+
+    const passwordHash = await bcrypt.hash('sekret', 10)
+    const user = new User({ username: 'root', passwordHash })
+    await user.save()
+  })
+  test('valid user is created', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'defaultuser',
+      name: 'Default User',
+      password: 'pazzwurd',
+    }
+    await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toHaveLength(usersAtStart.length +1)
+    const usernames = usersAtEnd.map(u => u.username)
+    expect(usernames).toContain(newUser.username)
+  })
+  test('fails with proper statuscode if username is taken', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'root',
+      name: 'Test username',
+      password: 'sekret'
+    }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    expect(result.body.error).toContain('expected `username` to be unique')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toEqual(usersAtStart)
+  })
+  test('fails with proper statuscode if username is too short', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'te',
+      name: 'Test username',
+      password: 'test_password'
+    }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    console.log(result.body.error)
+    expect(result.body.error).toContain('User validation failed: username: Path `username` (`te`) is shorter than the minimum allowed length (3)')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toEqual(usersAtStart)
+  })
+  test('fails with proper statuscode if password is too short', async () => {
+    const usersAtStart = await helper.usersInDb()
+    const newUser = {
+      username: 'tet',
+      name: 'Test username',
+      password: 'ta'
+    }
+    const result = await api
+      .post('/api/users')
+      .send(newUser)
+      .expect(400)
+      .expect('Content-Type', /application\/json/)
+    console.log(result.body.error)
+    expect(result.body.error).toContain('password must be longer that 3 characters')
+    const usersAtEnd = await helper.usersInDb()
+    expect(usersAtEnd).toEqual(usersAtStart)
+  })
+})
 
 afterAll(async () => {
   await mongoose.connection.close()
