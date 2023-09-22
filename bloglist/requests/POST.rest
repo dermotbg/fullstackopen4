@@ -1,10 +1,11 @@
 POST http://localhost:3003/api/blogs
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InRlc3RfdXNlcjIiLCJpZCI6IjY1MGQ2N2E3MWM3ZjkyOTZhZmZkMTZiZiIsImlhdCI6MTY5NTM3OTQxMCwiZXhwIjoxNjk1MzgzMDEwfQ.drDl4gL5Slso1wTcCjb3qozsJ_-SSjNM0VE2oler4rI
 
 {
-  "title": "To what we owe this POST",
-  "author": "WomAndrew Late",
-  "url": "/testblog",
-  "likes": 623,
+  "title": "Running out of title names",
+  "author": "The man of mystery",
+  "url": "/testblog/anothertest",
+  "likes": 111,
   "userId": "650d564808df9ef05f14f899"
 }
