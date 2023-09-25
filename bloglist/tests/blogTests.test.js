@@ -62,6 +62,12 @@ const listWithManyBlogs = [
 ]
 describe('total likes', () => {
 
+  test('of empty list is zero', () => {
+    const emptyList = []
+    const result = listHelper.totalLikes(emptyList)
+    expect(result).toBe(0)
+  })
+
   test('when list has only one blog, equals the likes of that', () => {
     const result = listHelper.totalLikes(listWithOneBlog)
     expect(result).toBe(5)
