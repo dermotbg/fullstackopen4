@@ -50,7 +50,6 @@ blogsRouter.post('/', userExtractor, async (request, response) => {
 })
 
 blogsRouter.delete('/:id', userExtractor, async (request, response) => {
-
   const decodedToken = jwt.verify(request.token, process.env.SECRET)
 
   if (!decodedToken.id){
@@ -68,10 +67,12 @@ blogsRouter.delete('/:id', userExtractor, async (request, response) => {
 blogsRouter.put('/:id', async (request, response) => {
   const body = request.body
   const blog = {
-    title: body.title,
+    user: body.user,
+    likes: body.likes,
     author: body.author,
+    title: body.title,
     url: body.url,
-    likes: body.likes
+    id: body.id
   }
   await Blog.findByIdAndUpdate(request.params.id, blog, { new: true, runValidators: true, context: 'query' })
   response.status(204).end()
